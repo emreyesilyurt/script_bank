@@ -1,0 +1,9 @@
+{
+  "demand_index": 0.30,
+  "inventory": 0.20,
+  "leadtime": 0.15,
+  "moq": 0.10,
+  "price": 0.10,
+  "ordered": 0.10,
+  "source": 0.05
+}
