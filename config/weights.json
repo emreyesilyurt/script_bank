@@ -1,9 +1,0 @@
-{
-  "demand_score": 0.25,
-  "availability_score": 0.25,
-  "inv_leadtime": 0.15,
-  "inv_price": 0.10,
-  "inv_moq": 0.10,
-  "is_authorized": 0.10,
-  "has_datasheet": 0.05
-}

@@ -1,0 +1,124 @@
+# Data source configuration
+data_sources:
+  bigquery:
+    project_id: "${GOOGLE_CLOUD_PROJECT}"
+    
+    # SOURCE TABLES (READ-ONLY - NEVER MODIFY)
+    source_dataset: "datadojo.prod"
+    source_tables:
+      panda: "panda"                    # READ-ONLY: datadojo.prod.panda
+      demand: "demand_normalized"       # READ-ONLY: datadojo.prod.demand_normalized
+    
+    # OUTPUT DATASET (OUR WORKSPACE)
+    output_dataset: "datadojo.part_priority_scoring"
+    output_tables:
+      part_scores: "part_scores"                     # Our main output table
+      part_scores_history: "part_scores_history"     # Historical snapshots
+      scoring_metrics: "scoring_metrics"             # Pipeline metrics
+      data_quality_reports: "data_quality_reports"   # Validation reports
+    
+    # Safety settings
+    read_only_sources: true           # Prevents accidental writes to source tables
+    max_bytes_billed: 1000000000     # 1GB query limit
+    use_query_cache: true
+    use_legacy_sql: false
+    
+# Processing configuration
+processing:
+  batch_size: 100000          # Rows per batch
+  max_workers: 4              # Parallel processing threads
+  memory_limit_gb: 8          # Memory limit per worker
+  
+  # Safety settings
+  dry_run: false              # Set to true to test queries without writing
+  validate_before_write: true # Always validate data before saving
+  
+  # Sampling for development/testing
+  sampling:
+    enabled: true
+    sample_size: 10000        # For development
+    method: "random"          # random, top_demand, balanced
+    
+# Output configuration  
+output:
+  formats: ["bigquery"]       # Only BigQuery for production safety
+  
+  bigquery:
+    write_disposition: "WRITE_TRUNCATE"  # WRITE_APPEND for incremental
+    create_disposition: "CREATE_IF_NEEDED"
+    table_schema_update_options: ["ALLOW_FIELD_ADDITION"]
+    
+    # Backup settings
+    create_backup: true       # Always backup before overwriting
+    backup_suffix: "_backup_${timestamp}"
+    
+  # Data retention
+  retention:
+    keep_daily_snapshots: 30   # Days
+    keep_monthly_snapshots: 12 # Months
+
+# Monitoring configuration
+monitoring:
+  metrics:
+    enabled: true
+    export_to: ["stdout", "bigquery"]  # Store metrics in our dataset
+    
+  alerting:
+    enabled: true
+    thresholds:
+      processing_rate_min: 1000    # Parts per second
+      success_rate_min: 0.95       # 95% success rate
+      avg_score_min: 30            # Minimum average score
+      
+  data_quality:
+    enabled: true
+    validation_rules: "feature_config.yaml"
+    fail_on_quality_issues: false  # Log warnings vs fail pipeline
+
+# Environment-specific overrides
+environments:
+  development:
+    data_sources:
+      bigquery:
+        max_bytes_billed: 100000000  # 100MB limit for dev
+    processing:
+      batch_size: 1000
+      dry_run: false               # Can test safely in dev
+      sampling:
+        enabled: true
+        sample_size: 1000
+        
+  staging:
+    processing:
+      batch_size: 50000
+      sampling:
+        enabled: true  
+        sample_size: 100000
+        
+  production:
+    processing:
+      batch_size: 200000
+      max_workers: 8
+      dry_run: false               # NEVER set to true in production
+      sampling:
+        enabled: false
+    monitoring:
+      alerting:
+        enabled: true
+        
+# SAFETY CONSTRAINTS
+safety:
+  # These tables are READ-ONLY - pipeline will fail if attempted to write
+  protected_tables:
+    - "datadojo.prod.panda"
+    - "datadojo.prod.demand_normalized"
+    
+  # Only allow writes to our dedicated dataset
+  allowed_write_datasets:
+    - "datadojo.part_priority_scoring"
+    
+  # Require confirmation for certain operations
+  require_confirmation:
+    - "DROP TABLE"
+    - "DELETE FROM"
+    - "TRUNCATE TABLE"
