@@ -1,9 +1,9 @@
 {
-  "demand_index": 0.30,
-  "inventory": 0.20,
-  "leadtime": 0.15,
-  "moq": 0.10,
-  "price": 0.10,
-  "ordered": 0.10,
-  "source": 0.05
+  "demand_score": 0.25,
+  "availability_score": 0.25,
+  "inv_leadtime": 0.15,
+  "inv_price": 0.10,
+  "inv_moq": 0.10,
+  "is_authorized": 0.10,
+  "has_datasheet": 0.05
 }
