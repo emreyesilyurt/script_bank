@@ -12,11 +12,7 @@ class PartScorer:
     """Main part scoring class for prioritizing electronic components."""
     
     def __init__(self, config: Dict = None):
-        """Initialize scorer with configuration.
-        
-        Args:
-            config: Configuration dictionary with weights and features
-        """
+        """Initialize scorer with configuration."""
         from ..config.settings import get_default_config
         
         self.config = config or get_default_config()
@@ -25,20 +21,11 @@ class PartScorer:
         
         # Initialize scalers
         self.robust_scaler = RobustScaler()
-        self.final_scaler = MinMaxScaler(feature_range=(1, 100))
+        self.final_scaler = MinMaxScaler(feature_range=(0, 100))  # Changed to 0-100
     
     def calculate_scores(self, df: pd.DataFrame, normalize=True) -> pd.DataFrame:
-        """Calculate priority scores for parts dataframe.
-        
-        Args:
-            df: Input dataframe with part data
-            normalize: Whether to normalize scores to 0-100 range
-            
-        Returns:
-            DataFrame with scoring features and priority_score added
-        """
+        """Calculate priority scores for parts dataframe."""
         if len(df) == 0:
-            # Handle empty dataframe
             empty_df = df.copy()
             empty_df['priority_score'] = pd.Series(dtype=float)
             empty_df['score_percentile'] = pd.Series(dtype=float)
@@ -47,25 +34,16 @@ class PartScorer:
             
         logger.info(f"Calculating scores for {len(df)} parts")
         
-        # Create working copy
         result_df = df.copy()
-        
-        # Step 1: Engineer features
         result_df = self._engineer_features(result_df)
-        
-        # Step 2: Calculate base weighted score
         result_df['base_score'] = self._calculate_base_score(result_df)
-        
-        # Step 3: Apply business rule boosts
         result_df['boosted_score'] = self._apply_boosts(result_df)
         
-        # Step 4: Normalize scores
         if normalize:
             result_df['priority_score'] = self._normalize_scores(result_df['boosted_score'])
         else:
             result_df['priority_score'] = result_df['boosted_score']
         
-        # Step 5: Add percentile ranking
         result_df['score_percentile'] = result_df['priority_score'].rank(pct=True) * 100
         
         logger.info(f"Scoring complete. Mean score: {result_df['priority_score'].mean():.2f}")
@@ -102,7 +80,6 @@ class PartScorer:
         """Apply business rule boosts to base scores."""
         boosted_score = df['base_score'].copy()
         
-        # Predefined boost conditions
         boost_conditions = [
             {
                 'name': 'ample_stock',
@@ -126,7 +103,6 @@ class PartScorer:
             }
         ]
         
-        # Apply boost conditions
         for boost in boost_conditions:
             try:
                 mask = boost['condition'](df)
@@ -139,27 +115,23 @@ class PartScorer:
         return boosted_score
     
     def _normalize_scores(self, scores: pd.Series) -> pd.Series:
-        """Normalize scores to 0-100 range."""
-        if len(scores) == 0 or scores.max() == scores.min():
+        """Normalize scores to 0-100 range ensuring no negative values."""
+        if len(scores) == 0:
+            return pd.Series(dtype=float)
+        
+        if scores.max() == scores.min():
             return pd.Series(50.0, index=scores.index)
         
-        # Separate zero and non-zero scores
-        non_zero_mask = scores > 0
+        # Simple min-max normalization to ensure 0-100 range
+        min_score = scores.min()
+        max_score = scores.max()
         
-        if non_zero_mask.sum() == 0:
-            return pd.Series(0.0, index=scores.index)
+        if max_score == min_score:
+            return pd.Series(50.0, index=scores.index)
         
-        # Normalize non-zero scores to 1-100 range
-        normalized = scores.copy()
-        non_zero_scores = scores[non_zero_mask].values.reshape(-1, 1)
+        normalized = ((scores - min_score) / (max_score - min_score)) * 100
         
-        try:
-            scaled_scores = self.final_scaler.fit_transform(non_zero_scores)
-            normalized[non_zero_mask] = scaled_scores.flatten()
-        except Exception as e:
-            logger.error(f"Error in normalization: {e}")
-            # Fallback to simple min-max
-            min_val, max_val = non_zero_scores.min(), non_zero_scores.max()
-            normalized[non_zero_mask] = 1 + (scores[non_zero_mask] - min_val) / (max_val - min_val) * 99
+        # Ensure no negative values and round
+        normalized = normalized.clip(lower=0).round(2)
         
-        return normalized.round(2)
+        return normalized
