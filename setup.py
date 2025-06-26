@@ -1,9 +1,11 @@
 """Setup configuration for part-priority-scoring module."""
 
 from setuptools import setup, find_packages
+from pathlib import Path
 
-with open("README.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
+# Read README file
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="part-priority-scoring",
@@ -13,7 +15,7 @@ setup(
     description="Part priority scoring module for electronic components",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/your-org/part-priority-scoring",
+    url="https://github.com/EETech-Group/part-priority-scoring",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -37,10 +39,10 @@ setup(
     extras_require={
         "dev": [
             "pytest>=7.0.0",
-            "pytest-cov",
-            "black",
-            "isort",
-            "flake8",
+            "pytest-cov>=4.0.0",
+            "black>=23.0.0",
+            "isort>=5.12.0",
+            "flake8>=6.0.0",
         ],
     },
     include_package_data=True,

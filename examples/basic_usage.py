@@ -5,6 +5,7 @@ from part_priority_scoring import score_parts, PartScorer
 
 def simple_example():
     """Simple scoring example with sample data."""
+    print("=== Simple Usage Example ===")
     
     # Create sample dataframe
     sample_data = pd.DataFrame({
@@ -21,13 +22,15 @@ def simple_example():
     # Score parts using convenience function
     scored_df = score_parts(sample_data)
     
-    print("Basic Scoring Results:")
-    print(scored_df[['pn', 'priority_score', 'score_percentile']].head())
+    print("Scoring Results:")
+    print(scored_df[['pn', 'priority_score', 'score_percentile', 'inventory', 'demand_all_time']].round(2))
+    print()
     
     return scored_df
 
 def custom_weights_example():
     """Example with custom weights."""
+    print("=== Custom Weights Example ===")
     
     # Sample data
     sample_data = pd.DataFrame({
@@ -49,13 +52,15 @@ def custom_weights_example():
     # Score with custom weights
     scored_df = score_parts(sample_data, weights_config=custom_weights)
     
-    print("\nCustom Weights Results:")
-    print(scored_df[['pn', 'priority_score']].head())
+    print("Custom Weights Results:")
+    print(scored_df[['pn', 'priority_score', 'demand_all_time']].round(2))
+    print()
     
     return scored_df
 
 def advanced_usage_example():
     """Advanced usage with PartScorer class."""
+    print("=== Advanced Usage Example ===")
     
     # Sample data
     sample_data = pd.DataFrame({
@@ -82,8 +87,9 @@ def advanced_usage_example():
     scorer = PartScorer(config)
     scored_df = scorer.calculate_scores(sample_data)
     
-    print("\nAdvanced Usage Results:")
-    print(scored_df[['pn', 'base_score', 'boosted_score', 'priority_score']].head())
+    print("Advanced Usage Results:")
+    print(scored_df[['pn', 'base_score', 'boosted_score', 'priority_score']].round(2))
+    print()
     
     return scored_df
 

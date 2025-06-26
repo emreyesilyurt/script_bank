@@ -1,0 +1,62 @@
+# Scoring weights configuration for part prioritization
+
+# Base feature weights (must sum to 1.0)
+base_weights:
+  demand_score: 0.25           # Historical demand importance
+  availability_score: 0.25     # Stock and leadtime importance  
+  inv_leadtime_weeks: 0.15     # Delivery speed importance
+  inv_first_price: 0.10        # Price competitiveness
+  inv_moq: 0.10               # Order flexibility
+  is_authorized: 0.10         # Source reliability
+  has_datasheet: 0.05         # Documentation completeness
+
+# Alternative weight sets for A/B testing
+weight_variants:
+  demand_focused:
+    demand_score: 0.40
+    availability_score: 0.20
+    inv_leadtime_weeks: 0.15
+    inv_first_price: 0.10
+    inv_moq: 0.05
+    is_authorized: 0.07
+    has_datasheet: 0.03
+    
+  availability_focused:
+    demand_score: 0.15
+    availability_score: 0.40
+    inv_leadtime_weeks: 0.20
+    inv_first_price: 0.08
+    inv_moq: 0.07
+    is_authorized: 0.07
+    has_datasheet: 0.03
+    
+  cost_focused:
+    demand_score: 0.20
+    availability_score: 0.20
+    inv_leadtime_weeks: 0.10
+    inv_first_price: 0.25
+    inv_moq: 0.15
+    is_authorized: 0.07
+    has_datasheet: 0.03
+
+# Business rule boosts - multiplicative improvements
+business_boosts:
+  ample_stock:
+    condition: "inventory >= 10 * moq"
+    multiplier: 1.1
+    description: "High inventory relative to MOQ"
+    
+  immediate_ship:
+    condition: "leadtime_weeks == 0"
+    multiplier: 1.15
+    description: "Zero lead time for immediate shipping"
+    
+  authorized_source:
+    condition: "source_type == 'Authorized'"
+    multiplier: 1.05
+    description: "Component from authorized distributor"
+    
+  high_demand:
+    condition: "demand_all_time > 100"
+    multiplier: 1.08
+    description: "Popular component with high historical demand"

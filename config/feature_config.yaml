@@ -1,0 +1,25 @@
+# Feature engineering configuration for part scoring
+
+# Features to apply log1p transformation (handles zero values gracefully)
+log_transforms:
+  - inventory      # log1p(inventory) - compresses inventory range
+  - first_price    # log1p(first_price) - compresses price range  
+  - moq           # log1p(moq) - normalizes order quantities
+
+# Features where lower values are better (apply inverse transform)
+inverse_transforms:
+  - leadtime_weeks  # 1/(1+leadtime) - shorter leadtime = higher score
+  - first_price     # 1/(1+price) - lower price = higher score
+  - moq            # 1/(1+moq) - lower MOQ = higher score
+
+# Binary indicator features
+binary_features:
+  - is_authorized      # source_type == 'Authorized'
+  - has_datasheet      # datasheet is not null
+  - in_stock          # inventory > 0
+  - immediate_availability  # leadtime_weeks == 0
+
+# Composite features combining multiple signals
+composite_features:
+  - availability_score  # Combined availability metric
+  - demand_score       # Normalized demand metric
