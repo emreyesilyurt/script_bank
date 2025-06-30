@@ -7,7 +7,7 @@ Temporary testing script to validate scoring logic with manually exported CSV da
 This script is separate from the main repo and used only for development testing.
 
 Usage:
-    1. Run sql/extract_test_sample.sql in BigQuery UI
+    1. Run the cost-optimized BigQuery query 
     2. Export result as CSV (name it 'test_sample_data.csv')  
     3. Place CSV in same directory as this script
     4. Run: python csv_test_scoring.py
@@ -28,18 +28,18 @@ logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
 
 class CSVPartScorer:
-    """Simplified part scorer for CSV testing."""
+    """Simplified part scorer for CSV testing"""
     
     def __init__(self, weights=None):
-        """Initialize with custom weights."""
+        """Initialize with custom weights"""
         self.weights = weights or {
-            'demand_score': 0.25,
-            'availability_score': 0.25,
-            'inv_leadtime_weeks': 0.15,
-            'inv_first_price': 0.10,
-            'inv_moq': 0.10,
-            'is_authorized': 0.10,
-            'has_datasheet': 0.05
+            'demand_score': 0.35,          # Increased from 0.25
+            'availability_score': 0.35,    # Increased from 0.25
+            'inv_leadtime_weeks': 0.15,    # Unchanged
+            'inv_moq': 0.10,              # Unchanged
+            'is_authorized': 0.05          # Reduced from 0.10
+            # REMOVED: 'inv_first_price': 0.10
+            # REMOVED: 'has_datasheet': 0.05
         }
         
         self.robust_scaler = RobustScaler()
@@ -79,24 +79,24 @@ class CSVPartScorer:
         return result_df
     
     def _engineer_features(self, df):
-        """Create engineered features."""
+        """Create engineered features"""
         logger.info("Engineering features...")
         
         # Fill missing values
         df['inventory'] = df['inventory'].fillna(0)
-        df['first_price'] = df['first_price'].fillna(0)
+        # REMOVED: df['first_price'] = df['first_price'].fillna(0)
         df['leadtime_weeks'] = df['leadtime_weeks'].fillna(0)
         df['moq'] = df['moq'].fillna(1)
         df['demand_all_time'] = df['demand_all_time'].fillna(0)
         
-        # Log transformations
+        # Log transformations (PRICING REMOVED)
         df['log_inventory'] = np.log1p(df['inventory'].clip(lower=0))
-        df['log_first_price'] = np.log1p(df['first_price'].clip(lower=0))
+        # REMOVED: df['log_first_price'] = np.log1p(df['first_price'].clip(lower=0))
         df['log_moq'] = np.log1p(df['moq'].clip(lower=0))
         
-        # Inverse transformations (lower is better)
+        # Inverse transformations (PRICING REMOVED)
         df['inv_leadtime_weeks'] = 1 / (1 + df['leadtime_weeks'].clip(lower=0))
-        df['inv_first_price'] = 1 / (1 + df['first_price'].clip(lower=0))
+        # REMOVED: df['inv_first_price'] = 1 / (1 + df['first_price'].clip(lower=0))
         df['inv_moq'] = 1 / (1 + df['moq'].clip(lower=0))
         
         # Binary features
@@ -115,7 +115,7 @@ class CSVPartScorer:
         # Demand score (normalized)
         df['demand_score'] = df['demand_all_time'].fillna(0)
         
-        # Scale features
+        # Scale features (PRICING REMOVED)
         scale_features = [col for col in df.columns 
                          if col.startswith(('log_', 'inv_', 'availability_', 'demand_'))]
         scale_features = [f for f in scale_features if f in df.columns]
@@ -136,6 +136,8 @@ class CSVPartScorer:
                 feature_values = df[feature].fillna(0)
                 base_score += feature_values * weight
                 logger.debug(f"Added {feature} with weight {weight}")
+            else:
+                logger.warning(f"Feature {feature} not found in dataframe")
         
         # Zero out completely unavailable items
         unavailable = (df['inventory'] == 0) & (df['leadtime_weeks'] > 12)
@@ -195,7 +197,7 @@ def load_csv_data(filename='test_sample_data.csv'):
     if not filepath.exists():
         logger.error(f"CSV file not found: {filepath}")
         logger.info("Please:")
-        logger.info("1. Run sql/extract_test_sample.sql in BigQuery UI")
+        logger.info("1. Run the cost-optimized BigQuery query")
         logger.info("2. Export result as CSV named 'test_sample_data.csv'")
         logger.info("3. Place CSV in same directory as this script")
         sys.exit(1)
@@ -206,12 +208,18 @@ def load_csv_data(filename='test_sample_data.csv'):
     logger.info(f"Loaded {len(df)} records")
     logger.info(f"Columns: {list(df.columns)}")
     
+    # Validate no pricing columns
+    pricing_cols = [col for col in df.columns if 'price' in col.lower()]
+    if pricing_cols:
+        logger.warning(f"Found pricing columns in CSV: {pricing_cols}")
+        logger.info("These will be ignored in scoring")
+    
     return df
 
 def run_scoring_tests():
-    """Run scoring tests and output just PN and scores."""
+    """Run scoring tests with updated strategies - PRICING REMOVED."""
     print("=" * 60)
-    print("Part Priority Scoring - CSV Testing")
+    print("Part Priority Scoring - CSV Testing (Pricing Removed)")
     print("=" * 60)
     
     # Load data
@@ -219,28 +227,28 @@ def run_scoring_tests():
     
     print(f"Loaded {len(df)} parts for scoring")
     
-    # Test different strategies
+    # Test different strategies (PRICING REMOVED)
     strategies = {
-        'default': {
-            'demand_score': 0.25,
-            'availability_score': 0.25,
+        'balanced': {
+            'demand_score': 0.35,
+            'availability_score': 0.35,
             'inv_leadtime_weeks': 0.15,
-            'inv_first_price': 0.10,
             'inv_moq': 0.10,
-            'is_authorized': 0.10,
-            'has_datasheet': 0.05
+            'is_authorized': 0.05
         },
         'demand_focused': {
             'demand_score': 0.50,
             'availability_score': 0.25,
-            'inv_first_price': 0.15,
-            'inv_leadtime_weeks': 0.10
+            'inv_leadtime_weeks': 0.15,
+            'inv_moq': 0.05,
+            'is_authorized': 0.05
         },
         'availability_focused': {
             'demand_score': 0.20,
-            'availability_score': 0.40,
-            'inv_leadtime_weeks': 0.25,
-            'inv_first_price': 0.15
+            'availability_score': 0.50,
+            'inv_leadtime_weeks': 0.20,
+            'inv_moq': 0.05,
+            'is_authorized': 0.05
         }
     }
     
@@ -248,6 +256,12 @@ def run_scoring_tests():
     
     for strategy_name, weights in strategies.items():
         print(f"\nTesting {strategy_name} strategy...")
+        
+        # Validate weights sum to 1.0
+        weights_sum = sum(weights.values())
+        if abs(weights_sum - 1.0) > 0.01:
+            logger.warning(f"Weights for {strategy_name} sum to {weights_sum}, not 1.0")
+        
         scorer = CSVPartScorer(weights)
         scored_df = scorer.score_parts(df)
         
@@ -259,9 +273,10 @@ def run_scoring_tests():
         
         print(f"  Average score: {scored_df['priority_score'].mean():.1f}")
         print(f"  Score range: {scored_df['priority_score'].min():.1f} - {scored_df['priority_score'].max():.1f}")
+        print(f"  Parts with score > 80: {(scored_df['priority_score'] > 80).sum()}")
     
     # Combine all results
-    final_results = results['default']
+    final_results = results['balanced']
     for strategy_name in ['demand_focused', 'availability_focused']:
         final_results = final_results.merge(
             results[strategy_name], 
@@ -269,26 +284,32 @@ def run_scoring_tests():
             how='outer'
         )
     
-    # Sort by default score
-    final_results = final_results.sort_values('default_score', ascending=False)
+    # Sort by balanced score (renamed from default)
+    final_results = final_results.sort_values('balanced_score', ascending=False)
     
     # Save simple results - just PN and scores
     output_file = 'part_scores_only.csv'
     final_results.to_csv(output_file, index=False)
     
-    print(f"\n" + "="*40)
+    print(f"\n" + "="*50)
     print("Final Results Summary")
-    print("="*40)
+    print("="*50)
     print(f"Total parts scored: {len(final_results)}")
     print(f"Results saved to: {output_file}")
     
     # Show top 10 for each strategy
     print(f"\nTop 10 Parts by Strategy:")
-    print("PN".ljust(15), "Default".ljust(10), "Demand".ljust(10), "Avail".ljust(10))
-    print("-" * 50)
+    print("PN".ljust(15), "Balanced".ljust(10), "Demand".ljust(10), "Avail".ljust(10))
+    print("-" * 55)
     
     for _, row in final_results.head(10).iterrows():
-        print(f"{row['pn']:<15} {row['default_score']:<10.1f} {row['demand_focused_score']:<10.1f} {row['availability_focused_score']:<10.1f}")
+        print(f"{row['pn']:<15} {row['balanced_score']:<10.1f} {row['demand_focused_score']:<10.1f} {row['availability_focused_score']:<10.1f}")
+    
+    # Show strategy comparison stats
+    print(f"\nStrategy Comparison:")
+    print(f"Balanced avg:     {final_results['balanced_score'].mean():.1f}")
+    print(f"Demand-focused:   {final_results['demand_focused_score'].mean():.1f}")
+    print(f"Availability:     {final_results['availability_focused_score'].mean():.1f}")
     
     print(f"\n" + "="*60)
     print("CSV Testing Complete!")
