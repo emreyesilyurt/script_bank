@@ -30,24 +30,24 @@ def get_default_config() -> Dict[str, Any]:
     }
 
 def _get_default_feature_config() -> Dict[str, Any]:
-    """Default feature configuration."""
+    """Default feature configuration - PRICING REMOVED."""
     return {
-        'log_transforms': ['inventory', 'first_price', 'moq'],
-        'inverse_transforms': ['leadtime_weeks', 'first_price', 'moq'],
+        'log_transforms': ['inventory', 'moq'],  
+        'inverse_transforms': ['leadtime_weeks', 'moq'], 
         'binary_features': ['is_authorized', 'has_datasheet', 'in_stock', 'immediate_availability'],
         'composite_features': ['availability_score', 'demand_score']
     }
 
 def _get_default_weights_config() -> Dict[str, Any]:
-    """Default weights configuration."""
+    """Default weights configuration - PRICING REMOVED AND REBALANCED."""
     return {
-        'demand_score': 0.25,
-        'availability_score': 0.25,
-        'inv_leadtime_weeks': 0.15,
-        'inv_first_price': 0.10,
-        'inv_moq': 0.10,
-        'is_authorized': 0.10,
-        'has_datasheet': 0.05
+        'demand_score': 0.35,          # Increased from 0.25
+        'availability_score': 0.35,    # Increased from 0.25
+        'inv_leadtime_weeks': 0.15,    # Unchanged
+        'inv_moq': 0.10,              # Unchanged (not pricing-related)
+        'is_authorized': 0.05          # Reduced from 0.10
+        # Removed: 'inv_first_price': 0.10
+        # Removed: 'has_datasheet': 0.05 (redistributed to other weights)
     }
 
 def load_config_file(config_path: str) -> Dict[str, Any]:

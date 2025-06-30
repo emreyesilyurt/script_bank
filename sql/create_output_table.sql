@@ -1,5 +1,3 @@
--- Create the output tables in our dedicated dataset
-
 -- Main scoring results table
 CREATE TABLE IF NOT EXISTS `datadojo.part_priority_scoring.part_scores` (
   pn STRING NOT NULL,

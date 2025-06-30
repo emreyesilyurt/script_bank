@@ -2,44 +2,29 @@
 
 # Base feature weights (must sum to 1.0)
 base_weights:
-  demand_score: 0.25           # Historical demand importance
-  availability_score: 0.25     # Stock and leadtime importance  
+  demand_score: 0.35           # Increased from 0.25 - Historical demand importance
+  availability_score: 0.35     # Increased from 0.25 - Stock and leadtime importance  
   inv_leadtime_weeks: 0.15     # Delivery speed importance
-  inv_first_price: 0.10        # Price competitiveness
-  inv_moq: 0.10               # Order flexibility
-  is_authorized: 0.10         # Source reliability
-  has_datasheet: 0.05         # Documentation completeness
+  inv_moq: 0.10               # Order flexibility (kept as it's about order constraints, not pricing)
+  is_authorized: 0.05         # Source reliability
 
 # Alternative weight sets for A/B testing
 weight_variants:
   demand_focused:
-    demand_score: 0.40
-    availability_score: 0.20
+    demand_score: 0.50
+    availability_score: 0.25
     inv_leadtime_weeks: 0.15
-    inv_first_price: 0.10
     inv_moq: 0.05
-    is_authorized: 0.07
-    has_datasheet: 0.03
+    is_authorized: 0.05
     
   availability_focused:
-    demand_score: 0.15
-    availability_score: 0.40
-    inv_leadtime_weeks: 0.20
-    inv_first_price: 0.08
-    inv_moq: 0.07
-    is_authorized: 0.07
-    has_datasheet: 0.03
-    
-  cost_focused:
     demand_score: 0.20
-    availability_score: 0.20
-    inv_leadtime_weeks: 0.10
-    inv_first_price: 0.25
-    inv_moq: 0.15
-    is_authorized: 0.07
-    has_datasheet: 0.03
+    availability_score: 0.50
+    inv_leadtime_weeks: 0.20
+    inv_moq: 0.05
+    is_authorized: 0.05
 
-# Business rule boosts - multiplicative improvements
+# Business rule boosts - multiplicative improvements (unchanged)
 business_boosts:
   ample_stock:
     condition: "inventory >= 10 * moq"

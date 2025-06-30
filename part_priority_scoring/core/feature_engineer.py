@@ -49,8 +49,8 @@ class FeatureEngineer:
         return df
     
     def _create_log_features(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Create logarithmic transformations."""
-        log_features = self.config.get('log_transforms', ['inventory', 'first_price', 'moq'])
+        """Create logarithmic transformations - PRICING REMOVED."""
+        log_features = self.config.get('log_transforms', ['inventory', 'moq']) 
         
         for feature in log_features:
             if feature in df.columns:
@@ -59,8 +59,8 @@ class FeatureEngineer:
         return df
     
     def _create_inverse_features(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Create inverse transformations for 'lower is better' metrics."""
-        inverse_features = self.config.get('inverse_transforms', ['leadtime_weeks', 'first_price', 'moq'])
+        """Create inverse transformations for 'lower is better' metrics - PRICING REMOVED."""
+        inverse_features = self.config.get('inverse_transforms', ['leadtime_weeks', 'moq'])  
         
         for feature in inverse_features:
             if feature in df.columns:
@@ -92,7 +92,7 @@ class FeatureEngineer:
     def _create_composite_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """Create composite features from multiple signals."""
         
-        # Availability score
+        # Availability score (unchanged)
         if all(col in df.columns for col in ['inventory', 'moq']):
             in_stock_score = df.get('in_stock', 0) * 0.5
             immediate_score = df.get('immediate_availability', 0) * 0.3
@@ -100,7 +100,7 @@ class FeatureEngineer:
             
             df['availability_score'] = (in_stock_score + immediate_score + inventory_ratio).clip(0, 2)
         
-        # Demand score
+        # Demand score (unchanged)
         if 'demand_all_time' in df.columns:
             df['demand_score'] = df['demand_all_time'].fillna(0)
         

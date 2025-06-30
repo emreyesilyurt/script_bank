@@ -21,36 +21,27 @@ def compare_weight_strategies():
     # Different weight strategies
     strategies = {
         'balanced': {
-            'demand_score': 0.25,
-            'availability_score': 0.25,
-            'inv_first_price': 0.20,
+            'demand_score': 0.35,
+            'availability_score': 0.35,
             'inv_leadtime_weeks': 0.15,
             'inv_moq': 0.10,
             'is_authorized': 0.05
         },
         'demand_focused': {
             'demand_score': 0.50,
-            'availability_score': 0.20,
-            'inv_first_price': 0.15,
-            'inv_leadtime_weeks': 0.10,
+            'availability_score': 0.25,
+            'inv_leadtime_weeks': 0.15,
+            'inv_moq': 0.05,
             'is_authorized': 0.05
         },
         'availability_focused': {
-            'demand_score': 0.15,
-            'availability_score': 0.40,
-            'inv_leadtime_weeks': 0.25,
-            'inv_first_price': 0.15,
-            'is_authorized': 0.05
-        },
-        'cost_focused': {
             'demand_score': 0.20,
-            'availability_score': 0.15,
-            'inv_first_price': 0.35,
-            'inv_moq': 0.25,
+            'availability_score': 0.50,
+            'inv_leadtime_weeks': 0.20,
+            'inv_moq': 0.05,
             'is_authorized': 0.05
         }
     }
-    
     print("=== Weight Strategy Comparison ===")
     results = {}
     

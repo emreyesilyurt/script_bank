@@ -12,7 +12,6 @@ def simple_example():
         'pn': ['PART001', 'PART002', 'PART003', 'PART004'],
         'inventory': [100, 0, 50, 1000],
         'leadtime_weeks': [0, 8, 2, 1],
-        'first_price': [1.50, 2.00, 0.75, 5.00],
         'moq': [1, 100, 10, 1],
         'demand_all_time': [500, 20, 200, 1000],
         'source_type': ['Authorized', 'Other', 'Authorized', 'Authorized'],

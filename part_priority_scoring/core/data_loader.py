@@ -28,7 +28,7 @@ class DataLoader:
             self.client = None
     
     def load_sample_data(self, limit: int = 10000) -> pd.DataFrame:
-        """Load sample data from BigQuery.
+        """Load sample data from BigQuery - PRICING REMOVED.
         
         Args:
             limit: Maximum number of rows to load
@@ -41,7 +41,7 @@ class DataLoader:
         
         logger.info(f"Loading sample data with limit {limit}")
         
-        # Query to join panda and demand data
+        # Query to join panda and demand data - REMOVED PRICING
         query = f"""
         WITH panda_sample AS (
           SELECT 
@@ -51,7 +51,7 @@ class DataLoader:
             category,
             manuf,
             CAST(inventory AS INT64) as inventory,
-            CAST(JSON_EXTRACT_SCALAR(pricing, '$.pricing[0].price') AS FLOAT64) as first_price,
+            -- REMOVED: CAST(JSON_EXTRACT_SCALAR(pricing, '$.pricing[0].price') AS FLOAT64) as first_price,
             CASE 
               WHEN REGEXP_CONTAINS(leadtime, r'(\\d+)\\s*Week') 
               THEN CAST(REGEXP_EXTRACT(leadtime, r'(\\d+)\\s*Week') AS INT64)
